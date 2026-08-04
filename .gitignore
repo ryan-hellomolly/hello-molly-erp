@@ -45,3 +45,9 @@ next-env.d.ts
 .data/
 
 /src/generated/prisma
+
+# Prisma-generated AI assistant skills
+/.agents/
+/.claude/skills/
+/.windsurf/skills/
+/skills-lock.json
