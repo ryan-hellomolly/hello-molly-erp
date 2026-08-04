@@ -19,16 +19,12 @@ afterAll(async () => {
 describe("foundation records", () => {
   it("creates, updates and deletes delivery addresses with audit", async () => {
     const actor = await db.user.findFirstOrThrow();
-    const created = await saveDeliveryAddress(
-      null,
-      { address: `${marker} Sydney`, sortOrder: 2 },
-      actor.id,
-    );
+    const created = await saveDeliveryAddress(null, { address: `${marker} Sydney` }, actor.id);
     ids.push(created.id);
     expect((await listDeliveryAddresses()).some(({ id }) => id === created.id)).toBe(true);
     const updated = await saveDeliveryAddress(
       created.id,
-      { address: `${marker} Melbourne`, sortOrder: 1 },
+      { address: `${marker} Melbourne` },
       actor.id,
     );
     expect(updated.address).toContain("Melbourne");

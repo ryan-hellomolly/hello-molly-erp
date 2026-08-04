@@ -8,10 +8,12 @@ export default async function Dashboard({ params }: PageProps<"/[locale]/workspa
   const zh = locale === "zh-CN";
   return (
     <>
-      <p className="text-sm font-semibold text-blue-600">
+      <p className="text-sm font-bold uppercase tracking-[0.16em] text-blue-600">
         {zh ? "运营控制塔" : "Operations control tower"}
       </p>
-      <h1 className="mt-2 text-3xl font-bold">{zh ? "今日工作台" : "Today’s workspace"}</h1>
+      <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+        {zh ? "今日工作台" : "Today’s workspace"}
+      </h1>
       <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {[
           [zh ? "开发中款式" : "Active styles", "1,284"],
@@ -19,9 +21,14 @@ export default async function Dashboard({ params }: PageProps<"/[locale]/workspa
           [zh ? "采购订单" : "Purchase orders", "128"],
           [zh ? "QC 风险" : "QC attention", "7"],
         ].map(([label, value]) => (
-          <article key={label} className="rounded-2xl border bg-white p-6">
+          <article
+            key={label}
+            className="group rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-lg"
+          >
             <p className="text-sm text-slate-500">{label}</p>
-            <p className="mt-3 text-3xl font-bold">{value}</p>
+            <p className="mt-3 text-3xl font-black tracking-tight group-hover:text-pink-600">
+              {value}
+            </p>
           </article>
         ))}
       </div>

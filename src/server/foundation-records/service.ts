@@ -4,7 +4,6 @@ import { db } from "@/server/db";
 
 export const deliveryAddressSchema = z.object({
   address: z.string().trim().min(3).max(500),
-  sortOrder: z.coerce.number().int().min(0).max(10000).default(0),
 });
 export const cashierAccountSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -29,7 +28,7 @@ async function audit(
   await db.auditEvent.create({ data: { actorId, action, entityType, entityId, metadata } });
 }
 export const listDeliveryAddresses = () =>
-  db.deliveryAddress.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] });
+  db.deliveryAddress.findMany({ orderBy: { createdAt: "asc" } });
 export async function saveDeliveryAddress(
   id: string | null,
   input: z.input<typeof deliveryAddressSchema>,
@@ -50,7 +49,9 @@ export async function saveDeliveryAddress(
 }
 export async function deleteDeliveryAddress(id: string, actorId: string) {
   const row = await db.deliveryAddress.findUnique({ where: { id } });
-  if (!row) {return false;}
+  if (!row) {
+    return false;
+  }
   await db.$transaction(async (tx) => {
     await tx.auditEvent.create({
       data: {
@@ -86,7 +87,9 @@ export async function saveCashierAccount(
 }
 export async function deleteCashierAccount(id: string, actorId: string) {
   const row = await db.cashierAccount.findUnique({ where: { id } });
-  if (!row) {return false;}
+  if (!row) {
+    return false;
+  }
   await db.$transaction(async (tx) => {
     await tx.auditEvent.create({
       data: {

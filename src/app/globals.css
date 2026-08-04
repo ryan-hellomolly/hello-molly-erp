@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f7f8;
+  --foreground: #181318;
+  --hm-pink: #f23d8d;
+  --hm-pink-dark: #d91f72;
+  --hm-blush: #fff0f6;
 }
 
 @theme inline {
@@ -10,17 +13,70 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-blue-50: #fff0f6;
+  --color-blue-100: #ffe0ed;
+  --color-blue-200: #ffc2da;
+  --color-blue-600: #f23d8d;
+  --color-blue-700: #d91f72;
+  --color-indigo-950: #25121c;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: #ffc2da;
+  color: #25121c;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  outline-color: var(--hm-pink);
+}
+
+button:not(:disabled),
+summary {
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--hm-pink);
+  box-shadow: 0 0 0 3px rgb(242 61 141 / 12%);
+}
+
+table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+table tbody tr:hover {
+  background: #fff8fb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

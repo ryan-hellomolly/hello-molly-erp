@@ -7,7 +7,9 @@ export default async function CashierAccountsPage({
   params,
 }: PageProps<"/[locale]/workspace/master-data/cashier-accounts">) {
   const { locale } = await params;
-  if (!isLocale(locale)) {notFound();}
+  if (!isLocale(locale)) {
+    notFound();
+  }
   const [rows, user] = await Promise.all([listCashierAccounts(), authService.currentUser()]);
   const zh = locale === "zh-CN";
   return (
@@ -16,6 +18,11 @@ export default async function CashierAccountsPage({
         ERP / {zh ? "基础资料 / 出纳账户" : "Master Data / Cashier Accounts"}
       </nav>
       <h1 className="mb-6 mt-3 text-3xl font-bold">{zh ? "出纳账户" : "Cashier Accounts"}</h1>
+      <p className="-mt-4 mb-6 text-slate-500">
+        {zh
+          ? "维护可供业务选择的名称清单。"
+          : "Maintain the list of names available to business workflows."}
+      </p>
       <CashierAccountManager
         locale={locale}
         rows={rows}

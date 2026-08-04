@@ -69,6 +69,10 @@ Authentication coverage is enforced at a starting floor of 40% statements, 35% b
 
 The authenticated shell is locale-routed under `/{locale}/workspace`. Its typed navigation configuration contains the fifteen top-level modules evidenced by the reference ERP and supports nested menu items plus role-based filtering. `en-AU` and `zh-CN` are the initial route locales; persistence of user language preference and full domain message dictionaries remain subsequent internationalisation work.
 
+## Hello Molly UI system
+
+The application shell uses a restrained Hello Molly brand system derived from the official black wordmark and pink crown identity: near-black typography and navigation structure, a focused pink action colour, blush interaction surfaces and warm neutral page backgrounds. Pink is reserved for primary actions, focus, active navigation and key metrics so operational tables remain readable. The shared shell includes a sticky header, responsive mobile drawer, clear current-route states, keyboard-visible focus styling, reduced-motion support and consistent hover/loading feedback. The login experience and dashboard use the same design tokens and lightweight inline crown mark without external asset dependencies.
+
 ## Customer master
 
 The bilingual customer list at `/{locale}/workspace/master-data/customers` reads from PostgreSQL with server-side search, sorting and pagination. Each customer has an administrator-only detail workspace for editing, activation/deactivation and immutable audit history. `GET /api/customers` requires an authenticated session; customer creation and `PATCH /api/customers/{id}` require `SYSTEM_ADMIN` plus trusted-origin validation. `GET /api/customers/{id}/audit` exposes that customer's audit history to administrators. Duplicate protection covers case-insensitive customer codes and normalized customer name plus country. Customer service database tests cover create, duplicate detection, search, pagination, editing, status changes, missing records and audit history, and are included in the enforced backend coverage report.
@@ -87,7 +91,7 @@ The bilingual warehouse workspace at `/{locale}/workspace/master-data/warehouses
 
 ## Reference data
 
-Reference data now follows the original ERP's independent navigation instead of one merged workspace. Master Data exposes separate pages for settlement methods, invoice types, sample types, expense types, size sorting and sales channels; finished-goods units live under Style Design and material units under Material Development. The legacy `/{locale}/workspace/master-data/reference-data` route redirects to Size Sorting. All pages share the audited reference-data API while filtering to their own type, so codes remain unique within each independent module. Administrators can create and edit every field, safely delete a value through confirmed deactivation, and restore it later; historical transaction references are preserved and every mutation is audited. Currency and trade-term records remain supported internally but are no longer mixed into the Master Data navigation.
+Reference data now follows the original ERP's independent navigation instead of one merged workspace. Master Data exposes separate pages for settlement methods, invoice types, sample types, expense types, size sorting and sales channels; finished-goods units live under Style Design and material units under Material Development. Settlement methods, invoice types, sample types, expense types, size sorting and sales channels use a deliberately simple one-name add/delete interface; technical unique codes are generated internally and deleted values are safely deactivated to preserve historical references. Unit masters retain their richer coded maintenance interface. The legacy `/{locale}/workspace/master-data/reference-data` route redirects to Size Sorting. Every mutation is audited.
 
 ## Master Data CRUD policy
 
@@ -95,7 +99,7 @@ Every current Master Data navigation module has administrator create, edit and d
 
 ## Delivery addresses and cashier accounts
 
-Dedicated Master Data modules mirror the original ERP fields. Delivery Addresses maintains ordered reusable address records. Cashier Accounts maintains QR-code URL, account name, routing number, account number, currency, address and notes with unique account-number/currency protection. Administrator create, edit and confirmed-delete actions are trusted-origin protected and audited.
+Dedicated Master Data modules mirror the streamlined original ERP maintenance pattern. Delivery Addresses uses an address-only list without a user-facing sequence field. Cashier Accounts uses the same one-name add/delete interface; required technical account identifiers remain internal for database compatibility. Administrator create and confirmed-delete actions are trusted-origin protected and audited.
 
 ## Template masters
 
