@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hello Molly ERP
 
-## Getting Started
+Production ERP implementation for teams in Australia and China. This repository is intentionally separate from the ERP exploration, captured evidence and customer prototype repository.
 
-First, run the development server:
+## Phase 0 baseline
+
+- Next.js 16 App Router with TypeScript and Tailwind CSS
+- PostgreSQL 17 with Prisma 7
+- Redis 8 with BullMQ 6
+- MinIO for local S3-compatible object storage
+- Mailpit for local email capture
+- Credential authentication primitives using Argon2, short-lived JWT access tokens and revocable database sessions
+- Vitest, ESLint and TypeScript validation
+
+## Local setup
+
+Prerequisites: Node.js 24+, npm 11+ and Docker Desktop.
 
 ```bash
+cp .env.example .env
+npm install
+npm run infra:up
+npm run db:generate
+npm run db:migrate -- --name initial_identity
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Application: <http://localhost:3000>
+- Health endpoint: <http://localhost:3000/api/health>
+- MinIO console: <http://localhost:9001>
+- Mailpit: <http://localhost:18025>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run the queue worker in a second terminal:
 
-## Learn More
+```bash
+npm run worker
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Quality checks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Never commit `.env`. Local credentials in `.env.example` are development-only and must not be reused outside a developer machine.
