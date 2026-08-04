@@ -18,11 +18,13 @@ export function SimpleReferenceManager({
   kind,
   rows,
   canManage,
+  fixedCategory,
 }: {
   locale: Locale;
   kind: Kind;
   rows: Row[];
   canManage: boolean;
+  fixedCategory?: string;
 }) {
   const zh = locale === "zh-CN";
   const router = useRouter();
@@ -83,6 +85,7 @@ export function SimpleReferenceManager({
         code,
         nameZh: name,
         nameEn: name,
+        category: fixedCategory,
       })
     ) {
       form.reset();

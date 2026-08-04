@@ -20,7 +20,9 @@ export async function PATCH(request: Request, context: RouteContext<"/api/refere
   const status = referenceStatusSchema.safeParse(body);
   if (status.success) {
     const result = await setReferenceStatus(id, status.data.active, user.id);
-    return NextResponse.json(result, { status: result.ok ? 200 : 404 });
+    return NextResponse.json(result, {
+      status: result.ok ? 200 : result.error === "HAS_ACTIVE_CHILDREN" ? 409 : 404,
+    });
   }
   const update = referenceUpdateSchema.safeParse(body);
   if (!update.success) {
@@ -31,7 +33,13 @@ export async function PATCH(request: Request, context: RouteContext<"/api/refere
   }
   const result = await updateReferenceValue(id, update.data, user.id);
   return NextResponse.json(result, {
-    status: result.ok ? 200 : result.error === "DUPLICATE_REFERENCE" ? 409 : 404,
+    status: result.ok
+      ? 200
+      : result.error === "DUPLICATE_REFERENCE"
+        ? 409
+        : result.error === "PARENT_NOT_FOUND"
+          ? 400
+          : 404,
   });
 }
 
@@ -45,5 +53,7 @@ export async function DELETE(request: Request, context: RouteContext<"/api/refer
   }
   const { id } = await context.params;
   const result = await setReferenceStatus(id, false, user.id);
-  return NextResponse.json(result, { status: result.ok ? 200 : 404 });
+  return NextResponse.json(result, {
+    status: result.ok ? 200 : result.error === "HAS_ACTIVE_CHILDREN" ? 409 : 404,
+  });
 }

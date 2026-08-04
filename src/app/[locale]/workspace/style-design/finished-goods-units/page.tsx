@@ -15,6 +15,7 @@ export default async function FinishedGoodsUnitsPage({
       titleZh="成品单位"
       titleEn="Finished Goods Units"
       fixedCategory="FINISHED_GOODS"
+      forceSimple
     />
   );
 }

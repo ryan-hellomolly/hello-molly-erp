@@ -3,7 +3,7 @@ import sanitizeHtml from "sanitize-html";
 import { z } from "zod";
 import { db } from "@/server/db";
 export const templateInputSchema = z.object({
-  type: z.enum(["SAMPLE", "MEASUREMENT", "CONSTRUCTION"]),
+  type: z.enum(["SAMPLE", "MEASUREMENT", "CONSTRUCTION", "PROCESS"]),
   code: z
     .string()
     .trim()
@@ -106,6 +106,20 @@ export const measurementTemplateUpdateSchema = z.discriminatedUnion("kind", [
     rows: z.array(measurementRowSchema).max(500),
   }),
 ]);
+const processRowSchema = z.object({
+  processName: z.string().trim().min(1).max(160),
+  processingTypeId: z.string().uuid().optional(),
+  workSeconds: z.coerce.number().min(0).max(100_000).default(0),
+  unitPrice: z.coerce.number().min(0).max(100_000).default(0),
+  tempUnitPrice: z.coerce.number().min(0).max(100_000).default(0),
+  openPricing: z.boolean().default(true),
+  isCountable: z.boolean().default(true),
+  isKeyProcess: z.boolean().default(true),
+});
+export const processTemplateUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  rows: z.array(processRowSchema).max(500),
+});
 export async function createTemplate(input: z.input<typeof templateInputSchema>, actorId: string) {
   const data = templateInputSchema.parse(input);
   const content =
@@ -142,7 +156,7 @@ export async function createTemplate(input: z.input<typeof templateInputSchema>,
   });
   return { ok: true, template } as const;
 }
-export async function listTemplates(type?: "SAMPLE" | "MEASUREMENT" | "CONSTRUCTION") {
+export async function listTemplates(type?: "SAMPLE" | "MEASUREMENT" | "CONSTRUCTION" | "PROCESS") {
   return db.templateMaster.findMany({
     where: type ? { type } : {},
     orderBy: [{ type: "asc" }, { code: "asc" }, { version: "desc" }],
@@ -157,7 +171,11 @@ export async function transitionTemplate(
   if (!existing) {
     return { ok: false, error: "TEMPLATE_NOT_FOUND" } as const;
   }
-  if (existing.type === "CONSTRUCTION" || existing.type === "MEASUREMENT") {
+  if (
+    existing.type === "CONSTRUCTION" ||
+    existing.type === "MEASUREMENT" ||
+    existing.type === "PROCESS"
+  ) {
     return { ok: false, error: "INVALID_TEMPLATE_TRANSITION" } as const;
   }
   const allowed =
@@ -224,6 +242,10 @@ export async function deleteConstructionTemplate(id: string, actorId: string) {
   if (!existing || existing.type !== "CONSTRUCTION") {
     return { ok: false, error: "TEMPLATE_NOT_FOUND" } as const;
   }
+  const inUseCount = await db.style.count({ where: { constructionTemplateId: id } });
+  if (inUseCount > 0) {
+    return { ok: false, error: "TEMPLATE_IN_USE" } as const;
+  }
   await db.$transaction(async (tx) => {
     await tx.auditEvent.create({
       data: {
@@ -280,6 +302,57 @@ export async function updateMeasurementTemplate(
 export async function deleteMeasurementTemplate(id: string, actorId: string) {
   const existing = await db.templateMaster.findUnique({ where: { id } });
   if (!existing || existing.type !== "MEASUREMENT") {
+    return { ok: false, error: "TEMPLATE_NOT_FOUND" } as const;
+  }
+  const inUseCount = await db.style.count({ where: { measurementTemplateId: id } });
+  if (inUseCount > 0) {
+    return { ok: false, error: "TEMPLATE_IN_USE" } as const;
+  }
+  await db.$transaction(async (tx) => {
+    await tx.auditEvent.create({
+      data: {
+        actorId,
+        action: "TEMPLATE_DELETED",
+        entityType: "TemplateMaster",
+        entityId: id,
+        metadata: { type: existing.type, code: existing.code, nameZh: existing.nameZh },
+      },
+    });
+    await tx.templateMaster.delete({ where: { id } });
+  });
+  return { ok: true } as const;
+}
+export async function updateProcessTemplate(
+  id: string,
+  input: z.input<typeof processTemplateUpdateSchema>,
+  actorId: string,
+) {
+  const data = processTemplateUpdateSchema.parse(input);
+  const existing = await db.templateMaster.findUnique({ where: { id } });
+  if (!existing || existing.type !== "PROCESS") {
+    return { ok: false, error: "TEMPLATE_NOT_FOUND" } as const;
+  }
+  const template = await db.$transaction(async (tx) => {
+    const updated = await tx.templateMaster.update({
+      where: { id },
+      data: { nameEn: data.name, nameZh: data.name, content: { rows: data.rows } },
+    });
+    await tx.auditEvent.create({
+      data: {
+        actorId,
+        action: "TEMPLATE_UPDATED",
+        entityType: "TemplateMaster",
+        entityId: id,
+        metadata: { name: data.name, version: existing.version },
+      },
+    });
+    return updated;
+  });
+  return { ok: true, template } as const;
+}
+export async function deleteProcessTemplate(id: string, actorId: string) {
+  const existing = await db.templateMaster.findUnique({ where: { id } });
+  if (!existing || existing.type !== "PROCESS") {
     return { ok: false, error: "TEMPLATE_NOT_FOUND" } as const;
   }
   await db.$transaction(async (tx) => {

@@ -14,6 +14,14 @@ export const referenceInputSchema = z
       "SAMPLE_TYPE",
       "EXPENSE_TYPE",
       "SALES_CHANNEL",
+      "STYLE_TYPE",
+      "SEASON",
+      "YEAR",
+      "STAGE",
+      "PROCESSING_TYPE",
+      "WASH_TYPE",
+      "FABRIC_TRIM_TYPE",
+      "EXECUTION_STANDARD",
     ]),
     code: z
       .string()
@@ -29,6 +37,7 @@ export const referenceInputSchema = z
     descriptionZh: z.string().trim().max(500).optional(),
     sortOrder: z.coerce.number().int().min(0).max(10000).default(0),
     decimalPlaces: z.coerce.number().int().min(0).max(6).default(0),
+    parentId: z.string().uuid().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.type === "CURRENCY" && !/^[A-Z]{3}$/.test(data.code)) {
@@ -54,6 +63,15 @@ export async function createReferenceValue(
   });
   if (duplicate) {
     return { ok: false, error: "DUPLICATE_REFERENCE", existingId: duplicate.id } as const;
+  }
+  if (data.parentId) {
+    const parent = await db.referenceValue.findUnique({
+      where: { id: data.parentId },
+      select: { type: true },
+    });
+    if (!parent || parent.type !== data.type) {
+      return { ok: false, error: "PARENT_NOT_FOUND" } as const;
+    }
   }
   const value = await db.$transaction(async (tx) => {
     const created = await tx.referenceValue.create({ data });
@@ -82,6 +100,14 @@ export async function setReferenceStatus(id: string, active: boolean, actorId: s
   if (!existing) {
     return { ok: false, error: "REFERENCE_NOT_FOUND" } as const;
   }
+  if (!active) {
+    const activeChildren = await db.referenceValue.count({
+      where: { parentId: id, active: true },
+    });
+    if (activeChildren > 0) {
+      return { ok: false, error: "HAS_ACTIVE_CHILDREN" } as const;
+    }
+  }
   const value = await db.$transaction(async (tx) => {
     const updated = await tx.referenceValue.update({ where: { id }, data: { active } });
     await tx.auditEvent.create({
@@ -107,6 +133,18 @@ export async function updateReferenceValue(
   const existing = await db.referenceValue.findUnique({ where: { id } });
   if (!existing) {
     return { ok: false, error: "REFERENCE_NOT_FOUND" } as const;
+  }
+  if (data.parentId === id) {
+    return { ok: false, error: "PARENT_NOT_FOUND" } as const;
+  }
+  if (data.parentId) {
+    const parent = await db.referenceValue.findUnique({
+      where: { id: data.parentId },
+      select: { type: true },
+    });
+    if (!parent || parent.type !== data.type) {
+      return { ok: false, error: "PARENT_NOT_FOUND" } as const;
+    }
   }
   const duplicate = await db.referenceValue.findFirst({
     where: { type: data.type, code: data.code, id: { not: id } },

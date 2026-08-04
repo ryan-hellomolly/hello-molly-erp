@@ -1,13 +1,16 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { db } from "@/server/db";
+import { createReferenceValue } from "@/server/reference-data/service";
 import {
   createTemplate,
   deleteConstructionTemplate,
   deleteMeasurementTemplate,
+  deleteProcessTemplate,
   listTemplates,
   transitionTemplate,
   updateConstructionTemplate,
   updateMeasurementTemplate,
+  updateProcessTemplate,
 } from "./service";
 const marker = `T${Date.now()}`;
 afterAll(async () => {
@@ -20,6 +23,17 @@ afterAll(async () => {
     where: { entityType: "TemplateMaster", entityId: { in: ids } },
   });
   await db.templateMaster.deleteMany({ where: { id: { in: ids } } });
+
+  const refs = await db.referenceValue.findMany({
+    where: { code: { startsWith: marker } },
+    select: { id: true },
+  });
+  const refIds = refs.map(({ id }) => id);
+  await db.auditEvent.deleteMany({
+    where: { entityType: "ReferenceValue", entityId: { in: refIds } },
+  });
+  await db.referenceValue.deleteMany({ where: { id: { in: refIds } } });
+
   await db.$disconnect();
 });
 describe("template masters", () => {
@@ -178,6 +192,96 @@ describe("template masters", () => {
         },
       }),
     ).not.toBeNull();
+    await db.auditEvent.deleteMany({
+      where: { entityType: "TemplateMaster", entityId: created.template.id },
+    });
+  });
+  it("creates process templates, blocks transitions and round-trips rows", async () => {
+    const actor = await db.user.findFirstOrThrow();
+    const processingType = await createReferenceValue(
+      { type: "PROCESSING_TYPE", code: `${marker}PT`, nameEn: "Sewing", nameZh: "车缝" },
+      actor.id,
+    );
+    if (!processingType.ok) {
+      throw new Error("Expected processing type reference create to succeed");
+    }
+    const created = await createTemplate(
+      {
+        type: "PROCESS",
+        code: `${marker}P`,
+        version: 1,
+        nameEn: "Basic tee process",
+        nameZh: "基础T恤工序",
+        content: {
+          rows: [
+            {
+              processName: "封肩缝车埋左夹",
+              processingTypeId: processingType.value.id,
+              workSeconds: 0,
+              unitPrice: 0.08,
+              tempUnitPrice: 0,
+              openPricing: true,
+              isCountable: true,
+              isKeyProcess: true,
+            },
+          ],
+        },
+      },
+      actor.id,
+    );
+    expect(created).toMatchObject({ ok: true, template: { status: "PUBLISHED" } });
+    if (!created.ok) {
+      throw new Error("Expected process template creation to succeed");
+    }
+    expect(await transitionTemplate(created.template.id, "RETIRED", actor.id)).toMatchObject({
+      ok: false,
+      error: "INVALID_TEMPLATE_TRANSITION",
+    });
+    const updated = await updateProcessTemplate(
+      created.template.id,
+      {
+        name: "基础T恤工序 v2",
+        rows: [
+          {
+            processName: "裁剪",
+            processingTypeId: processingType.value.id,
+            workSeconds: 1,
+            unitPrice: 0,
+            tempUnitPrice: 0,
+            openPricing: true,
+            isCountable: true,
+            isKeyProcess: true,
+          },
+          {
+            processName: "钉车上袖1",
+            workSeconds: 0,
+            unitPrice: 0.2,
+            tempUnitPrice: 0,
+            openPricing: true,
+            isCountable: true,
+            isKeyProcess: false,
+          },
+        ],
+      },
+      actor.id,
+    );
+    expect(updated).toMatchObject({
+      ok: true,
+      template: {
+        nameZh: "基础T恤工序 v2",
+        content: {
+          rows: [
+            { processName: "裁剪", processingTypeId: processingType.value.id },
+            { processName: "钉车上袖1", isKeyProcess: false },
+          ],
+        },
+      },
+    });
+    expect(
+      await updateProcessTemplate(crypto.randomUUID(), { name: "x", rows: [] }, actor.id),
+    ).toMatchObject({ ok: false, error: "TEMPLATE_NOT_FOUND" });
+    expect(await deleteProcessTemplate(created.template.id, actor.id)).toEqual({ ok: true });
+    expect(await db.templateMaster.findUnique({ where: { id: created.template.id } })).toBeNull();
     await db.auditEvent.deleteMany({
       where: { entityType: "TemplateMaster", entityId: created.template.id },
     });

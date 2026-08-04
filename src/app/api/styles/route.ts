@@ -2,38 +2,22 @@ import { NextResponse } from "next/server";
 import { authService } from "@/server/auth/auth-service";
 import { requireSystemAdmin } from "@/server/auth/authorization";
 import { isTrustedOrigin } from "@/server/auth/security";
-import {
-  createReferenceValue,
-  listReferenceValues,
-  referenceInputSchema,
-} from "@/server/reference-data/service";
-const types = [
-  "SIZE",
-  "UNIT",
-  "CURRENCY",
-  "TRADE_TERM",
-  "SETTLEMENT_METHOD",
-  "INVOICE_TYPE",
-  "SAMPLE_TYPE",
-  "EXPENSE_TYPE",
-  "SALES_CHANNEL",
-  "STYLE_TYPE",
-  "SEASON",
-  "YEAR",
-  "STAGE",
-  "PROCESSING_TYPE",
-  "WASH_TYPE",
-  "FABRIC_TRIM_TYPE",
-  "EXECUTION_STANDARD",
-] as const;
+import { createStyle, createStyleSchema, listStyles } from "@/server/styles/service";
+
 export async function GET(request: Request) {
   if (!(await authService.currentUser())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const raw = new URL(request.url).searchParams.get("type");
-  const type = types.find((x) => x === raw);
-  return NextResponse.json({ data: await listReferenceValues(type) });
+  const q = new URL(request.url).searchParams;
+  return NextResponse.json(
+    await listStyles({
+      page: Number(q.get("page") || 1),
+      pageSize: Number(q.get("pageSize") || 20),
+      search: q.get("search") || "",
+    }),
+  );
 }
+
 export async function POST(request: Request) {
   if (!isTrustedOrigin(request.headers.get("origin"))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -42,15 +26,15 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  const parsed = referenceInputSchema.safeParse(await request.json().catch(() => null));
+  const parsed = createStyleSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
       { error: "VALIDATION_ERROR", issues: parsed.error.flatten() },
       { status: 400 },
     );
   }
-  const result = await createReferenceValue(parsed.data, user.id);
+  const result = await createStyle(parsed.data, user.id);
   return NextResponse.json(result, {
-    status: result.ok ? 201 : result.error === "PARENT_NOT_FOUND" ? 400 : 409,
+    status: result.ok ? 201 : result.error === "DUPLICATE_STYLE" ? 409 : 400,
   });
 }

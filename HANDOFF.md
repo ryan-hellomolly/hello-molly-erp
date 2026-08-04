@@ -90,7 +90,7 @@ Latest verified baseline:
 
 - ESLint: passed
 - TypeScript: passed
-- Vitest: 14 test files, 46 tests passed
+- Vitest: 16 test files, 56 tests passed
 - Next.js production build: passed
 
 ## 6. Current database migrations
@@ -107,8 +107,12 @@ Applied migration history:
 - `20260804023505_template_master`
 - `20260804032313_split_reference_modules`
 - `20260804032939_delivery_addresses_cashier_accounts`
+- `20260804042335_style_design_master`
+- `20260804054133_style_design_reference_fields`
+- `20260804062201_style_type_hierarchy`
+- `20260804064605_add_process_template_type`
 
-The most recent UI simplifications require no new migration. Use `npm run db:deploy` for existing migrations. Never run destructive migration/reset commands without explicit user approval.
+Use `npm run db:deploy` for existing migrations. Never run destructive migration/reset commands without explicit user approval.
 
 ## 7. Completed platform foundations
 
@@ -158,6 +162,7 @@ Cashier Accounts still have required account fields in the existing Prisma model
 
 - Construction Requirement Templates: master-detail layout, rich text, tables, links, images, `.docx` import, preview, print, fullscreen, edit and confirmed delete
 - Measurement Chart Templates: separate `BASIC` rich-text and `SIZE_TABLE` structured table modes, master-detail layout, edit and confirmed delete
+- Process Templates (`/{locale}/workspace/style-design/templates/process`, new `TemplateType.PROCESS`): master-detail layout, a reorderable (up/down move buttons, no drag-and-drop) row table of process steps — name, 环节 stage (dropdown sourced from the `PROCESSING_TYPE` reference list), work seconds, unit price, temp unit price, and three toggles (open pricing/countable/key process) — edit and confirmed delete. Reuses the exact `TemplateMaster`/`createTemplate` infrastructure Construction/Measurement already use; no new model. Excel import/export shown in the reference ERP's screenshot is deliberately deferred — no spreadsheet library exists in the codebase yet.
 
 Templates are available immediately after creation and do not use an active/inactive lifecycle.
 
@@ -166,7 +171,19 @@ Templates are available immediately after creation and do not use an active/inac
 - Finished Goods Units are under Style Design
 - Material Units are under Material Development
 
-These retain richer coded reference maintenance because unit category, symbol and decimal precision can be operationally relevant.
+Material Units retain the richer coded reference maintenance interface (code/category/symbol/sort/decimal places), since those remain operationally relevant there. Finished Goods Units was switched to the simple one-name add/delete interface (same flow as Processing Type and the other Style Design reference lists), per user request — `ReferenceModulePage` gained a `forceSimple` prop for this, and `SimpleReferenceManager` gained an optional `fixedCategory` prop so it can still satisfy `UNIT`'s required-`category` validation behind the scenes without exposing category/symbol/decimal-places in the UI.
+
+## 8a. Style Design status (first link in the seven-stage chain)
+
+Style Design Phase 1 is complete and production-build verified: a `Style` master with a manual five-state lifecycle (`DRAFT → IN_DEVELOPMENT → SAMPLE_APPROVED → ACTIVE`, `DISCONTINUED` reachable from any state and reactivatable back to `ACTIVE`, same restorable-soft-delete precedent as Customer/Warehouse), plus a simple `StyleColorway` child list (color code/name, ACTIVE/DISCONTINUED). `Style.id` is the stable `styleId` every later stage (BOM, sampling, work orders, inventory) will hold as a foreign key. Unlike other Master Data domains, style creation uses a dedicated `/{locale}/workspace/style-design/styles/new` page rather than an inline collapsible form, per user preference, and redirects to the new style's detail page on success.
+
+After the user shared a screenshot of the reference ERP's actual 款式创建 (Style Creation) screen, the `Style` fields and its prerequisite reference data were reworked to match it. Eight new reference-list modules now live under Style Design (one shared `[referenceType]` catch-all route): Style Type, Season, Year, Stage, Processing Type, Wash Type, Fabric/Trim Type, Execution Standard. `Style` now links to Style Type/Season/Year/Stage (each an optional FK to `ReferenceValue`, `onDelete: Restrict`) instead of the earlier free-text `category`/`season` fields, and gained `designNumber`, `patternMakerName`, `composition`, `brandPrice` and `canSample` to match the real form. Richer masters also visible in that screenshot — Designer, Brand, Barcode Center/International Barcode, Process Template, Style Gallery, Common Style SKU — and the create screen's lower tabs (BOM, size chart, process, production schedule, factory/customer linkage, attachments) are explicitly deferred to later passes.
+
+After a second reference-ERP screenshot of the Style Type management page, Style Type was reworked from a flat list into an arbitrary-depth **tree** (the other 7 reference lists stay flat, per user confirmation) — `ReferenceValue` gained a self-relation (`parentId`/`parent`/`children`, `onDelete: Restrict`, reusable by any reference type later), a new `StyleTypeManager` component (`src/components/reference-data/style-type-manager.tsx`) renders it with 新建/添加子级/编辑/删除 actions, and a shared depth-first `buildReferenceTree` helper (`src/components/reference-data/reference-tree.ts`, DB-free and safe to import from client components) both drives that tree UI and indents the Style form's 类型 dropdown so any node — leaf or branch — can be selected. The existing `symbol` field doubles as the tree's 前缀/prefix column, so no new column was needed for that. Deactivating a node with active children is rejected (`HAS_ACTIVE_CHILDREN`) to keep the soft-delete-safety convention intact.
+
+Deliberately out of scope for Phase 1: size/SKU matrix generation (deferred to Sampling/Bulk Production). `deleteConstructionTemplate`/`deleteMeasurementTemplate` reject deletion with `TEMPLATE_IN_USE` if a `Style` references the template, preserving the `styleId` reference chain.
+
+Fixed a pre-existing test flake while verifying this work: Vitest ran test files in parallel against the same live Postgres database, so `db.user.findFirstOrThrow()` in one file could race against `auth.integration.test.ts` deleting its own temporary users, causing an intermittent `AuditEvent_actorId_fkey` violation. `fileParallelism: false` was added to `vitest.config.ts` since these are DB-integration tests sharing one physical database, not unit tests — file-level parallelism was never safe for this suite.
 
 ## 9. Important implementation conventions
 
@@ -197,6 +214,7 @@ These retain richer coded reference maintenance because unit category, symbol an
 - Reference lists: `src/server/reference-data/`, `src/components/reference-data/`
 - Delivery address/cashier account domain: `src/server/foundation-records/`, `src/components/foundation-records/`
 - Templates: `src/server/templates/`, `src/components/templates/`
+- Style Design domain: `src/server/styles/`, `src/components/styles/`
 - API route handlers: `src/app/api/`
 - Prisma schema: `prisma/schema.prisma`
 
@@ -213,7 +231,7 @@ These retain richer coded reference maintenance because unit category, symbol an
 
 ## 12. Recommended next work
 
-Confirm the next module with the user before implementation. Based on the current sequence, the likely next domain is Merchandise Planning (`商品企划`), followed by Style Design (`款式设计`) and the seven-stage product development workflow.
+Confirm the next module with the user before implementation. Style Design Phase 1 (`Style` master + colorway list, `styleId`, 8 prerequisite reference lists matching the reference ERP) is now complete. Likely next steps: the richer Style Design masters deferred above (Designer, Brand, Barcode Center, Process Template, Style Gallery, Common Style SKU) and the create screen's BOM/size-chart/process tabs; Merchandise Planning (`商品企划`); or Sampling/Bulk Production to add the size/SKU matrix deliberately deferred from Style Design Phase 1.
 
 For any new module:
 
@@ -242,10 +260,11 @@ For any new module:
 - [x] Cashier account list
 - [x] Construction requirement templates
 - [x] Measurement chart templates
+- [x] Style Design Phase 1: `Style` master, colorway list, stable `styleId`, 8 prerequisite reference lists
 - [x] Current full lint/type/test/build verification
 - [ ] Confirm next business module and acceptance criteria
 - [ ] Implement Merchandise Planning domain
-- [ ] Implement Style Design domain and stable `styleId`
+- [ ] Add Style Design size/SKU matrix (Sampling/Bulk Production)
 - [ ] Implement the seven-stage product development workflow
 - [ ] Expand inventory, purchasing, finance and reporting domains
 - [ ] Complete internationalisation and granular permission coverage

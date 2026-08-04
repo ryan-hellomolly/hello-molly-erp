@@ -12,7 +12,15 @@ export type Kind =
   | "INVOICE_TYPE"
   | "SAMPLE_TYPE"
   | "EXPENSE_TYPE"
-  | "SALES_CHANNEL";
+  | "SALES_CHANNEL"
+  | "STYLE_TYPE"
+  | "SEASON"
+  | "YEAR"
+  | "STAGE"
+  | "PROCESSING_TYPE"
+  | "WASH_TYPE"
+  | "FABRIC_TRIM_TYPE"
+  | "EXECUTION_STANDARD";
 type Row = {
   id: string;
   type: Kind;
