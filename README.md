@@ -28,6 +28,8 @@ npm run dev
 Open:
 
 - Application: <http://localhost:3000>
+- English ERP workspace: <http://localhost:3000/en-AU/workspace>
+- Chinese ERP workspace: <http://localhost:3000/zh-CN/workspace>
 - Health endpoint: <http://localhost:3000/api/health>
 - MinIO console: <http://localhost:9001>
 - Mailpit: <http://localhost:18025>
@@ -62,3 +64,11 @@ Set `SEED_ADMIN_PASSWORD` in `.env`, run `npm run db:seed`, then sign in at `/lo
 Backend authentication tests include unit and PostgreSQL integration coverage. `npm test` creates uniquely named temporary records and removes them after the suite. Use `npm run test:coverage` to generate the report under `coverage/`.
 
 Authentication coverage is enforced at a starting floor of 40% statements, 35% branches, 50% functions and 40% lines. These are regression floors, not quality targets; raise them as the service layer grows. Cookie/header orchestration is complemented by runtime route verification, while credential, reset, refresh, ownership and revocation rules are database-tested.
+
+## ERP application shell
+
+The authenticated shell is locale-routed under `/{locale}/workspace`. Its typed navigation configuration contains the fifteen top-level modules evidenced by the reference ERP and supports nested menu items plus role-based filtering. `en-AU` and `zh-CN` are the initial route locales; persistence of user language preference and full domain message dictionaries remain subsequent internationalisation work.
+
+## Customer master
+
+The bilingual customer list at `/{locale}/workspace/master-data/customers` reads from PostgreSQL with server-side search, sorting and pagination. `GET /api/customers` requires an authenticated session; `POST /api/customers` additionally requires `SYSTEM_ADMIN` and trusted-origin validation. Duplicate protection covers case-insensitive customer codes and normalized customer name plus country. Customer service database tests are included in the enforced backend coverage report.

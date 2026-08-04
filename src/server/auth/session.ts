@@ -60,6 +60,7 @@ export async function getCurrentUser() {
       id: session.user.id,
       email: session.user.email,
       displayName: session.user.displayName,
+      locale: session.user.locale,
       roles: session.user.userRoles.map(({ role }) => role.code),
     };
   } catch {

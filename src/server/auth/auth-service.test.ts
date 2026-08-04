@@ -20,7 +20,13 @@ describe("AuthService boundary", () => {
   });
 
   it("delegates current-user and logout operations without exposing persistence details", async () => {
-    const user = { id: "u1", email: "u@example.test", displayName: "User", roles: ["USER"] };
+    const user = {
+      id: "u1",
+      email: "u@example.test",
+      displayName: "User",
+      locale: "en-AU",
+      roles: ["USER"],
+    };
     const ports = {
       authenticate: vi.fn(),
       createSession: vi.fn(),

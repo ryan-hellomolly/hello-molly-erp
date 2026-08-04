@@ -18,33 +18,55 @@ enum UserStatus {
   LOCKED
 }
 
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Customer {
+  id             String         @id @default(uuid()) @db.Uuid
+  code           String         @unique
+  name           String
+  normalizedName String
+  countryCode    String         @db.Char(2)
+  salesChannel   String?
+  ownerName      String?
+  status         CustomerStatus @default(ACTIVE)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([normalizedName, countryCode])
+  @@index([name])
+  @@index([status])
+}
+
 model User {
-  id           String       @id @default(uuid()) @db.Uuid
-  email        String       @unique
-  displayName  String
-  passwordHash String
-  locale       String       @default("en-AU")
-  status       UserStatus   @default(ACTIVE)
-  tokenVersion Int          @default(0)
-  lastLoginAt  DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  sessions     Session[]
-  userRoles    UserRole[]
-  auditEvents  AuditEvent[] @relation("AuditActor")
+  id                  String               @id @default(uuid()) @db.Uuid
+  email               String               @unique
+  displayName         String
+  passwordHash        String
+  locale              String               @default("en-AU")
+  status              UserStatus           @default(ACTIVE)
+  tokenVersion        Int                  @default(0)
+  lastLoginAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  sessions            Session[]
+  userRoles           UserRole[]
+  auditEvents         AuditEvent[]         @relation("AuditActor")
   passwordResetTokens PasswordResetToken[]
 
   @@index([status])
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  tokenHash String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
 }

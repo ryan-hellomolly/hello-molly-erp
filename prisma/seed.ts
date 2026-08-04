@@ -11,6 +11,37 @@ if (!databaseUrl) {
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
 
 async function main() {
+  const localCustomers = [
+    {
+      code: "CUS-0001",
+      name: "Hello Molly Retail",
+      normalizedName: "hello molly retail",
+      countryCode: "AU",
+      salesChannel: "Retail",
+      ownerName: "Mia",
+    },
+    {
+      code: "CUS-0002",
+      name: "Hello Molly Online",
+      normalizedName: "hello molly online",
+      countryCode: "AU",
+      salesChannel: "Online",
+      ownerName: "Jade",
+    },
+    {
+      code: "CUS-0003",
+      name: "China Development Office",
+      normalizedName: "china development office",
+      countryCode: "CN",
+      salesChannel: "Internal",
+      ownerName: "Lily",
+    },
+  ];
+  await Promise.all(
+    localCustomers.map((customer) =>
+      db.customer.upsert({ where: { code: customer.code }, update: {}, create: customer }),
+    ),
+  );
   const permissions = await Promise.all(
     ["system.health.read", "users.read", "users.manage", "roles.manage"].map((code) =>
       db.permission.upsert({

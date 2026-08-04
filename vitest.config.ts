@@ -15,8 +15,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      include: ["src/server/auth/**/*.ts"],
-      exclude: ["src/server/auth/**/*.test.ts", "src/server/auth/contracts.ts"],
+      include: ["src/server/auth/**/*.ts", "src/server/customers/**/*.ts"],
+      exclude: ["src/server/**/*.test.ts", "src/server/auth/contracts.ts"],
       thresholds: {
         statements: 40,
         branches: 35,

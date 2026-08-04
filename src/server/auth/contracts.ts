@@ -2,6 +2,7 @@ export type SessionUser = Readonly<{
   id: string;
   email: string;
   displayName: string;
+  locale: string;
   roles: readonly string[];
 }>;
 
