@@ -1,18 +1,12 @@
 import Link from "next/link";
-import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/table/data-table";
+import { CustomerTable } from "@/components/customers/customer-table";
 import { isLocale } from "@/i18n/config";
 import { translate } from "@/i18n/messages";
 import { listCustomers } from "@/server/customers/service";
 import { notFound } from "next/navigation";
-type Row = {
-  code: string;
-  name: string;
-  countryCode: string;
-  salesChannel: string | null;
-  ownerName: string | null;
-  status: string;
-};
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
+import { CustomerCreateForm } from "@/components/customers/customer-create-form";
+import { authService } from "@/server/auth/auth-service";
 export default async function CustomersPage({
   params,
   searchParams,
@@ -25,15 +19,10 @@ export default async function CustomersPage({
   const query = await searchParams;
   const search = typeof query.search === "string" ? query.search : "";
   const page = Math.max(1, Number(query.page) || 1);
-  const result = await listCustomers({ search, page, pageSize: 20, sort: "code" });
-  const columns: ColumnDef<Row>[] = [
-    { accessorKey: "code", header: translate(locale, "masterData", "customerCode") },
-    { accessorKey: "name", header: translate(locale, "masterData", "customerName") },
-    { accessorKey: "countryCode", header: translate(locale, "masterData", "country") },
-    { accessorKey: "salesChannel", header: translate(locale, "masterData", "channel") },
-    { accessorKey: "ownerName", header: translate(locale, "masterData", "owner") },
-    { accessorKey: "status", header: translate(locale, "masterData", "status") },
-  ];
+  const [result, user] = await Promise.all([
+    listCustomers({ search, page, pageSize: 20, sort: "code" }),
+    authService.currentUser(),
+  ]);
   const base = `/${locale}/workspace/master-data/customers`;
   return (
     <>
@@ -56,22 +45,15 @@ export default async function CustomersPage({
             placeholder={translate(locale, "shell", "search")}
             className="rounded-lg border px-3 py-2"
           />
-          <button className="rounded-lg bg-blue-600 px-4 py-2 text-white">
-            {locale === "zh-CN" ? "查询" : "Search"}
-          </button>
+          <PendingSubmitButton
+            idleLabel={locale === "zh-CN" ? "查询" : "Search"}
+            pendingLabel={locale === "zh-CN" ? "查询中…" : "Searching…"}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white"
+          />
         </form>
       </div>
-      <DataTable
-        data={result.data}
-        columns={columns}
-        labels={{
-          search: translate(locale, "shell", "search"),
-          columns: translate(locale, "shell", "columns"),
-          previous: translate(locale, "shell", "previous"),
-          next: translate(locale, "shell", "next"),
-          empty: translate(locale, "shell", "empty"),
-        }}
-      />
+      {user?.roles.includes("SYSTEM_ADMIN") && <CustomerCreateForm locale={locale} />}
+      <CustomerTable data={result.data} locale={locale} />
       <div className="mt-4 flex justify-end gap-2">
         <Link
           aria-disabled={page <= 1}

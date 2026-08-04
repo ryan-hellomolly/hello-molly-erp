@@ -23,6 +23,60 @@ enum CustomerStatus {
   INACTIVE
 }
 
+enum SupplierStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum FactoryStatus {
+  ACTIVE
+  ON_HOLD
+  INACTIVE
+}
+
+enum WarehouseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WarehouseOwnership {
+  HELLO_MOLLY
+  THIRD_PARTY
+  FACTORY
+  SUPPLIER
+}
+
+enum WarehouseLocationStatus {
+  ACTIVE
+  BLOCKED
+  INACTIVE
+}
+
+enum ReferenceType {
+  SIZE
+  UNIT
+  CURRENCY
+  TRADE_TERM
+  SETTLEMENT_METHOD
+  INVOICE_TYPE
+  SAMPLE_TYPE
+  EXPENSE_TYPE
+  SALES_CHANNEL
+}
+
+enum TemplateType {
+  SAMPLE
+  MEASUREMENT
+  CONSTRUCTION
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
 model Customer {
   id             String         @id @default(uuid()) @db.Uuid
   code           String         @unique
@@ -38,6 +92,160 @@ model Customer {
   @@unique([normalizedName, countryCode])
   @@index([name])
   @@index([status])
+}
+
+model Supplier {
+  id             String                  @id @default(uuid()) @db.Uuid
+  code           String                  @unique
+  name           String
+  normalizedName String
+  countryCode    String                  @db.Char(2)
+  category       String?
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  status         SupplierStatus          @default(ACTIVE)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  certifications SupplierCertification[]
+
+  @@unique([normalizedName, countryCode])
+  @@index([name])
+  @@index([status])
+}
+
+model SupplierCertification {
+  id                String    @id @default(uuid()) @db.Uuid
+  supplierId        String    @db.Uuid
+  certificationType String
+  certificateNumber String?
+  issuedBy          String?
+  validFrom         DateTime? @db.Date
+  expiresAt         DateTime  @db.Date
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  supplier          Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, certificationType, certificateNumber])
+  @@index([supplierId, expiresAt])
+  @@index([expiresAt])
+}
+
+model Factory {
+  id             String        @id @default(uuid()) @db.Uuid
+  code           String        @unique
+  name           String
+  normalizedName String
+  countryCode    String        @db.Char(2)
+  city           String?
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  capabilities   String[]      @default([])
+  status         FactoryStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([normalizedName, countryCode])
+  @@index([name])
+  @@index([status])
+}
+
+model Warehouse {
+  id          String              @id @default(uuid()) @db.Uuid
+  code        String              @unique
+  name        String
+  countryCode String              @db.Char(2)
+  city        String?
+  address     String?
+  ownership   WarehouseOwnership
+  ownerName   String?
+  status      WarehouseStatus     @default(ACTIVE)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  locations   WarehouseLocation[]
+
+  @@index([name])
+  @@index([ownership, status])
+}
+
+model WarehouseLocation {
+  id          String                  @id @default(uuid()) @db.Uuid
+  warehouseId String                  @db.Uuid
+  code        String
+  name        String?
+  zone        String?
+  status      WarehouseLocationStatus @default(ACTIVE)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  warehouse   Warehouse               @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  @@unique([warehouseId, code])
+  @@index([warehouseId, status])
+}
+
+model ReferenceValue {
+  id            String        @id @default(uuid()) @db.Uuid
+  type          ReferenceType
+  code          String
+  nameEn        String
+  nameZh        String
+  category      String?
+  symbol        String?
+  descriptionEn String?
+  descriptionZh String?
+  sortOrder     Int           @default(0)
+  decimalPlaces Int           @default(0)
+  active        Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([type, code])
+  @@index([type, active, sortOrder])
+}
+
+model DeliveryAddress {
+  id        String   @id @default(uuid()) @db.Uuid
+  address   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model CashierAccount {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  routingNumber String?
+  accountNumber String
+  currency      String
+  address       String?
+  notes         String?
+  qrCodeUrl     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([accountNumber, currency])
+  @@index([name])
+}
+
+model TemplateMaster {
+  id          String         @id @default(uuid()) @db.Uuid
+  type        TemplateType
+  code        String
+  version     Int
+  nameEn      String
+  nameZh      String
+  description String?
+  content     Json
+  status      TemplateStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([type, code, version])
+  @@index([type, status, code])
 }
 
 model User {

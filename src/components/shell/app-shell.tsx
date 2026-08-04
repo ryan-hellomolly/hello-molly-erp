@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Locale } from "@/i18n/config";
 import { labelFor, type NavigationItem } from "@/config/navigation";
 import { changeLocaleAction, logoutAction } from "@/app/actions/auth";
+import { PendingSubmitButton } from "@/components/ui/pending-submit-button";
 export function AppShell({
   locale,
   userName,
@@ -40,13 +41,19 @@ export function AppShell({
           <form action={changeLocaleAction}>
             <input type="hidden" name="locale" value={other} />
             <input type="hidden" name="returnTo" value={switchedPath} />
-            <button className="rounded-lg border px-3 py-2">{zh ? "EN" : "中文"}</button>
+            <PendingSubmitButton
+              idleLabel={zh ? "EN" : "中文"}
+              pendingLabel="…"
+              className="rounded-lg border px-3 py-2"
+            />
           </form>
           <span className="hidden sm:inline">{userName}</span>
           <form action={logoutAction}>
-            <button className="rounded-lg bg-slate-900 px-3 py-2 text-white">
-              {zh ? "退出" : "Sign out"}
-            </button>
+            <PendingSubmitButton
+              idleLabel={zh ? "退出" : "Sign out"}
+              pendingLabel={zh ? "退出中…" : "Signing out…"}
+              className="rounded-lg bg-slate-900 px-3 py-2 text-white"
+            />
           </form>
         </div>
       </header>

@@ -15,7 +15,16 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      include: ["src/server/auth/**/*.ts", "src/server/customers/**/*.ts"],
+      include: [
+        "src/server/auth/**/*.ts",
+        "src/server/customers/**/*.ts",
+        "src/server/suppliers/**/*.ts",
+        "src/server/factories/**/*.ts",
+        "src/server/warehouses/**/*.ts",
+        "src/server/reference-data/**/*.ts",
+        "src/server/templates/**/*.ts",
+        "src/server/foundation-records/**/*.ts",
+      ],
       exclude: ["src/server/**/*.test.ts", "src/server/auth/contracts.ts"],
       thresholds: {
         statements: 40,
