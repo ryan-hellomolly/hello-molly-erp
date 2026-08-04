@@ -6,7 +6,9 @@ export async function GET() {
   const startedAt = Date.now();
 
   try {
-    if (redis.status === "wait") await redis.connect();
+    if (redis.status === "wait") {
+      await redis.connect();
+    }
     await Promise.all([db.$queryRaw`SELECT 1`, redis.ping()]);
 
     return NextResponse.json({

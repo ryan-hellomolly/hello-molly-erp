@@ -1,2 +1,22 @@
-import { NextResponse } from "next/server"; import { getCurrentUser } from "@/server/auth/session"; import { isTrustedOrigin } from "@/server/auth/security"; import { db } from "@/server/db";
-export async function DELETE(request:Request,{params}:{params:Promise<{sessionId:string}>}){if(!isTrustedOrigin(request.headers.get("origin")))return NextResponse.json({error:"Forbidden"},{status:403});const user=await getCurrentUser();if(!user)return NextResponse.json({error:"Unauthorized"},{status:401});const {sessionId}=await params;const result=await db.session.updateMany({where:{id:sessionId,userId:user.id,revokedAt:null},data:{revokedAt:new Date()}});return NextResponse.json({revoked:result.count===1})}
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/server/auth/session";
+import { isTrustedOrigin } from "@/server/auth/security";
+import { db } from "@/server/db";
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string }> },
+) {
+  if (!isTrustedOrigin(request.headers.get("origin"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { sessionId } = await params;
+  const result = await db.session.updateMany({
+    where: { id: sessionId, userId: user.id, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  return NextResponse.json({ revoked: result.count === 1 });
+}

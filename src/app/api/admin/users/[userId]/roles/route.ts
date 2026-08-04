@@ -1,2 +1,22 @@
-import {NextResponse}from"next/server";import{z}from"zod";import{requireSystemAdmin}from"@/server/auth/authorization";import{isTrustedOrigin}from"@/server/auth/security";import{replaceUserRoles}from"@/server/auth/access-management";
-export async function PUT(request:Request,{params}:{params:Promise<{userId:string}>}){if(!isTrustedOrigin(request.headers.get("origin")))return NextResponse.json({error:"Forbidden"},{status:403});const actor=await requireSystemAdmin();if(!actor)return NextResponse.json({error:"Forbidden"},{status:403});const body=z.object({roleIds:z.array(z.uuid()).max(50)}).safeParse(await request.json().catch(()=>null));if(!body.success)return NextResponse.json({error:"Invalid roles"},{status:400});await replaceUserRoles(actor.id,(await params).userId,body.data.roleIds);return NextResponse.json({updated:true})}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { requireSystemAdmin } from "@/server/auth/authorization";
+import { isTrustedOrigin } from "@/server/auth/security";
+import { replaceUserRoles } from "@/server/auth/access-management";
+export async function PUT(request: Request, { params }: { params: Promise<{ userId: string }> }) {
+  if (!isTrustedOrigin(request.headers.get("origin"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const actor = await requireSystemAdmin();
+  if (!actor) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const body = z
+    .object({ roleIds: z.array(z.uuid()).max(50) })
+    .safeParse(await request.json().catch(() => null));
+  if (!body.success) {
+    return NextResponse.json({ error: "Invalid roles" }, { status: 400 });
+  }
+  await replaceUserRoles(actor.id, (await params).userId, body.data.roleIds);
+  return NextResponse.json({ updated: true });
+}

@@ -1,0 +1,10 @@
+.next
+node_modules
+coverage
+out
+build
+src/generated/prisma
+package-lock.json
+.agents
+.claude
+.windsurf

@@ -25,7 +25,11 @@ describe("authentication tokens", () => {
     const { SignJWT } = await import("jose");
     const { verifyAccessToken } = await import("./tokens");
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-    const token = await new SignJWT({ sid: "session-1", ver: 1 }).setProtectedHeader({ alg: "HS256" }).setSubject("user-1").setExpirationTime("0s").sign(secret);
+    const token = await new SignJWT({ sid: "session-1", ver: 1 })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("user-1")
+      .setExpirationTime("0s")
+      .sign(secret);
     await expect(verifyAccessToken(token)).rejects.toThrow();
   });
 });

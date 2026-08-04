@@ -1,3 +1,17 @@
-import { NextResponse } from "next/server"; import { z } from "zod";
-import { resetPassword } from "@/server/auth/password-reset"; import { isTrustedOrigin } from "@/server/auth/security";
-export async function POST(request:Request){if(!isTrustedOrigin(request.headers.get("origin")))return NextResponse.json({error:"Forbidden"},{status:403});const parsed=z.object({token:z.string().min(20),password:z.string()}).safeParse(await request.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:"Invalid request"},{status:400});const result=await resetPassword(parsed.data.token,parsed.data.password);return NextResponse.json(result,{status:result.ok?200:400})}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { resetPassword } from "@/server/auth/password-reset";
+import { isTrustedOrigin } from "@/server/auth/security";
+export async function POST(request: Request) {
+  if (!isTrustedOrigin(request.headers.get("origin"))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const parsed = z
+    .object({ token: z.string().min(20), password: z.string() })
+    .safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+  const result = await resetPassword(parsed.data.token, parsed.data.password);
+  return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+}

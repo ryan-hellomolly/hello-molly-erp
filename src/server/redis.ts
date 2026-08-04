@@ -7,4 +7,6 @@ export const redis =
   globalForRedis.redis ??
   new IORedis(env.REDIS_URL, { maxRetriesPerRequest: null, lazyConnect: true });
 
-if (env.NODE_ENV !== "production") globalForRedis.redis = redis;
+if (env.NODE_ENV !== "production") {
+  globalForRedis.redis = redis;
+}

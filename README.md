@@ -42,9 +42,12 @@ npm run worker
 
 ```bash
 npm run lint
+npm run format:check
 npm run typecheck
 npm test
 npm run build
 ```
+
+Run `npm run format` before committing. ESLint enforces code-quality rules; Prettier owns whitespace, wrapping, quotes and line length.
 
 Never commit `.env`. Local credentials in `.env.example` are development-only and must not be reused outside a developer machine.
