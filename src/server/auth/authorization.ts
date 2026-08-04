@@ -1,7 +1,7 @@
 import "server-only";
-import { getCurrentUser } from "./session";
+import { authService } from "./auth-service";
 export async function requireSystemAdmin() {
-  const user = await getCurrentUser();
+  const user = await authService.currentUser();
   if (!user?.roles.includes("SYSTEM_ADMIN")) {
     return null;
   }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/server/auth/session";
 import { isTrustedOrigin } from "@/server/auth/security";
-import { db } from "@/server/db";
+import { revokeOwnedSession } from "@/server/auth/session-management";
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> },
@@ -14,9 +14,5 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { sessionId } = await params;
-  const result = await db.session.updateMany({
-    where: { id: sessionId, userId: user.id, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
-  return NextResponse.json({ revoked: result.count === 1 });
+  return NextResponse.json({ revoked: await revokeOwnedSession(user.id, sessionId) });
 }

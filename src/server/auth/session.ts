@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { db } from "@/server/db";
 import { env } from "@/server/env";
 import { createRefreshToken, hashRefreshToken, signAccessToken, verifyAccessToken } from "./tokens";
+import { rotateRefreshCredential } from "./refresh-credential";
 const ACCESS = "hm_erp_access";
 const REFRESH = "hm_erp_refresh";
 const options = {
@@ -91,39 +92,24 @@ export async function rotateCurrentSession() {
   }
   const sessionId = value.slice(0, separator);
   const supplied = value.slice(separator + 1);
-  const session = await db.session.findUnique({
-    where: { id: sessionId },
-    include: { user: true },
-  });
-  if (
-    !session ||
-    session.revokedAt ||
-    session.expiresAt <= new Date() ||
-    session.user.status !== "ACTIVE" ||
-    session.refreshTokenHash !== hashRefreshToken(supplied)
-  ) {
-    if (session) {
-      await db.session.update({ where: { id: session.id }, data: { revokedAt: new Date() } });
-    }
+  const rotated = await rotateRefreshCredential(sessionId, supplied);
+  if (!rotated) {
     store.delete(ACCESS);
     store.delete(REFRESH);
     return false;
   }
-  const next = createRefreshToken();
-  const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 86_400_000);
-  await db.session.update({
-    where: { id: session.id },
-    data: { refreshTokenHash: hashRefreshToken(next), rotatedAt: new Date(), expiresAt },
-  });
   store.set(
     ACCESS,
     await signAccessToken({
-      sub: session.userId,
+      sub: rotated.userId,
       sessionId,
-      tokenVersion: session.user.tokenVersion,
+      tokenVersion: rotated.tokenVersion,
     }),
     { ...options, maxAge: env.ACCESS_TOKEN_TTL_SECONDS },
   );
-  store.set(REFRESH, `${sessionId}.${next}`, { ...options, expires: expiresAt });
+  store.set(REFRESH, `${sessionId}.${rotated.refreshToken}`, {
+    ...options,
+    expires: rotated.expiresAt,
+  });
   return true;
 }

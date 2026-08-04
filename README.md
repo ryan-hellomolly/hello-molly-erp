@@ -45,9 +45,20 @@ npm run lint
 npm run format:check
 npm run typecheck
 npm test
+npm run test:coverage
 npm run build
 ```
 
 Run `npm run format` before committing. ESLint enforces code-quality rules; Prettier owns whitespace, wrapping, quotes and line length.
 
 Never commit `.env`. Local credentials in `.env.example` are development-only and must not be reused outside a developer machine.
+
+## Authentication architecture
+
+Credential authentication uses Argon2id, short-lived JWT access cookies, hashed rotating refresh credentials and revocable PostgreSQL sessions. `AuthService` is the application boundary; route handlers and Server Actions do not depend directly on the credential implementation. `OidcAdapter` is reserved for a future enterprise identity provider and is intentionally not implemented in Phase 0.
+
+Set `SEED_ADMIN_PASSWORD` in `.env`, run `npm run db:seed`, then sign in at `/login` with `admin@hellomolly.com.au`. Never use the local development password in a shared or deployed environment.
+
+Backend authentication tests include unit and PostgreSQL integration coverage. `npm test` creates uniquely named temporary records and removes them after the suite. Use `npm run test:coverage` to generate the report under `coverage/`.
+
+Authentication coverage is enforced at a starting floor of 40% statements, 35% branches, 50% functions and 40% lines. These are regression floors, not quality targets; raise them as the service layer grows. Cookie/header orchestration is complemented by runtime route verification, while credential, reset, refresh, ownership and revocation rules are database-tested.
