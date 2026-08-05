@@ -84,4 +84,57 @@ describe("reference data", () => {
       ),
     ).toMatchObject({ ok: false, error: "DUPLICATE_REFERENCE" });
   });
+
+  it("builds a style type hierarchy and protects it from orphaning", async () => {
+    const actor = await db.user.findFirstOrThrow();
+    const parent = await createReferenceValue(
+      { type: "STYLE_TYPE", code: `${marker}TOP`, nameEn: "Tops", nameZh: "上衣" },
+      actor.id,
+    );
+    if (!parent.ok) {
+      throw new Error("expected parent style type create to succeed");
+    }
+    const child = await createReferenceValue(
+      {
+        type: "STYLE_TYPE",
+        code: `${marker}TSHIRT`,
+        nameEn: "T-Shirt",
+        nameZh: "T恤",
+        symbol: "T",
+        parentId: parent.value.id,
+      },
+      actor.id,
+    );
+    expect(child).toMatchObject({ ok: true, value: { parentId: parent.value.id, symbol: "T" } });
+
+    const otherType = await createReferenceValue(
+      { type: "SEASON", code: `${marker}SEASONX`, nameEn: "Spring", nameZh: "春季" },
+      actor.id,
+    );
+    if (!otherType.ok) {
+      throw new Error("expected season create to succeed");
+    }
+    expect(
+      await createReferenceValue(
+        {
+          type: "STYLE_TYPE",
+          code: `${marker}BAD`,
+          nameEn: "Bad child",
+          nameZh: "无效子级",
+          parentId: otherType.value.id,
+        },
+        actor.id,
+      ),
+    ).toMatchObject({ ok: false, error: "PARENT_NOT_FOUND" });
+
+    expect(await setReferenceStatus(parent.value.id, false, actor.id)).toMatchObject({
+      ok: false,
+      error: "HAS_ACTIVE_CHILDREN",
+    });
+    if (!child.ok) {
+      throw new Error("expected child style type create to succeed");
+    }
+    expect(await setReferenceStatus(child.value.id, false, actor.id)).toMatchObject({ ok: true });
+    expect(await setReferenceStatus(parent.value.id, false, actor.id)).toMatchObject({ ok: true });
+  });
 });

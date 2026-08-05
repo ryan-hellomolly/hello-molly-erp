@@ -63,18 +63,40 @@ enum ReferenceType {
   SAMPLE_TYPE
   EXPENSE_TYPE
   SALES_CHANNEL
+  STYLE_TYPE
+  SEASON
+  YEAR
+  STAGE
+  PROCESSING_TYPE
+  WASH_TYPE
+  FABRIC_TRIM_TYPE
+  EXECUTION_STANDARD
 }
 
 enum TemplateType {
   SAMPLE
   MEASUREMENT
   CONSTRUCTION
+  PROCESS
 }
 
 enum TemplateStatus {
   DRAFT
   PUBLISHED
   RETIRED
+}
+
+enum StyleStatus {
+  DRAFT
+  IN_DEVELOPMENT
+  SAMPLE_APPROVED
+  ACTIVE
+  DISCONTINUED
+}
+
+enum StyleColorwayStatus {
+  ACTIVE
+  DISCONTINUED
 }
 
 model Customer {
@@ -88,6 +110,7 @@ model Customer {
   status         CustomerStatus @default(ACTIVE)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  styles         Style[]
 
   @@unique([normalizedName, countryCode])
   @@index([name])
@@ -185,23 +208,32 @@ model WarehouseLocation {
 }
 
 model ReferenceValue {
-  id            String        @id @default(uuid()) @db.Uuid
-  type          ReferenceType
-  code          String
-  nameEn        String
-  nameZh        String
-  category      String?
-  symbol        String?
-  descriptionEn String?
-  descriptionZh String?
-  sortOrder     Int           @default(0)
-  decimalPlaces Int           @default(0)
-  active        Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id             String           @id @default(uuid()) @db.Uuid
+  type           ReferenceType
+  code           String
+  nameEn         String
+  nameZh         String
+  category       String?
+  symbol         String?
+  descriptionEn  String?
+  descriptionZh  String?
+  sortOrder      Int              @default(0)
+  decimalPlaces  Int              @default(0)
+  active         Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  parentId       String?          @db.Uuid
+  parent         ReferenceValue?  @relation("ReferenceHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children       ReferenceValue[] @relation("ReferenceHierarchy")
+  stylesAsUnit   Style[]          @relation("StyleUnit")
+  stylesAsType   Style[]          @relation("StyleType")
+  stylesAsSeason Style[]          @relation("StyleSeason")
+  stylesAsYear   Style[]          @relation("StyleYear")
+  stylesAsStage  Style[]          @relation("StyleStage")
 
   @@unique([type, code])
   @@index([type, active, sortOrder])
+  @@index([parentId])
 }
 
 model DeliveryAddress {
@@ -231,21 +263,76 @@ model CashierAccount {
 }
 
 model TemplateMaster {
-  id          String         @id @default(uuid()) @db.Uuid
-  type        TemplateType
-  code        String
-  version     Int
-  nameEn      String
-  nameZh      String
-  description String?
-  content     Json
-  status      TemplateStatus @default(DRAFT)
-  publishedAt DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id                           String         @id @default(uuid()) @db.Uuid
+  type                         TemplateType
+  code                         String
+  version                      Int
+  nameEn                       String
+  nameZh                       String
+  description                  String?
+  content                      Json
+  status                       TemplateStatus @default(DRAFT)
+  publishedAt                  DateTime?
+  createdAt                    DateTime       @default(now())
+  updatedAt                    DateTime       @updatedAt
+  stylesAsConstructionTemplate Style[]        @relation("StyleConstructionTemplate")
+  stylesAsMeasurementTemplate  Style[]        @relation("StyleMeasurementTemplate")
 
   @@unique([type, code, version])
   @@index([type, status, code])
+}
+
+model Style {
+  id                     String          @id @default(uuid()) @db.Uuid
+  code                   String          @unique
+  nameEn                 String
+  nameZh                 String
+  styleTypeId            String?         @db.Uuid
+  seasonId               String?         @db.Uuid
+  yearId                 String?         @db.Uuid
+  stageId                String?         @db.Uuid
+  customerId             String?         @db.Uuid
+  unitId                 String?         @db.Uuid
+  constructionTemplateId String?         @db.Uuid
+  measurementTemplateId  String?         @db.Uuid
+  designNumber           String?
+  patternMakerName       String?
+  composition            String?
+  brandPrice             Float?
+  canSample              Boolean         @default(false)
+  notes                  String?
+  status                 StyleStatus     @default(DRAFT)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  styleType              ReferenceValue? @relation("StyleType", fields: [styleTypeId], references: [id], onDelete: Restrict)
+  season                 ReferenceValue? @relation("StyleSeason", fields: [seasonId], references: [id], onDelete: Restrict)
+  year                   ReferenceValue? @relation("StyleYear", fields: [yearId], references: [id], onDelete: Restrict)
+  stage                  ReferenceValue? @relation("StyleStage", fields: [stageId], references: [id], onDelete: Restrict)
+  customer               Customer?       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  unit                   ReferenceValue? @relation("StyleUnit", fields: [unitId], references: [id], onDelete: Restrict)
+  constructionTemplate   TemplateMaster? @relation("StyleConstructionTemplate", fields: [constructionTemplateId], references: [id], onDelete: Restrict)
+  measurementTemplate    TemplateMaster? @relation("StyleMeasurementTemplate", fields: [measurementTemplateId], references: [id], onDelete: Restrict)
+  colorways              StyleColorway[]
+
+  @@index([nameEn])
+  @@index([status])
+  @@index([customerId])
+}
+
+model StyleColorway {
+  id          String              @id @default(uuid()) @db.Uuid
+  styleId     String              @db.Uuid
+  colorCode   String
+  colorNameEn String
+  colorNameZh String
+  status      StyleColorwayStatus @default(ACTIVE)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  style       Style               @relation(fields: [styleId], references: [id], onDelete: Restrict)
+
+  @@unique([styleId, colorCode])
+  @@index([styleId, status])
 }
 
 model User {

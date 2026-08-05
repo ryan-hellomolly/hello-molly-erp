@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+html {
+  /* Compact app-wide density: Tailwind's spacing/type/radius scales are rem-based,
+     so this one change shrinks every utility class uniformly across every page. */
+  font-size: 87.5%;
+}
+
 :root {
   --background: #f8f7f8;
   --foreground: #181318;

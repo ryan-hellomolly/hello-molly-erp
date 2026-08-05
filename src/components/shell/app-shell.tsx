@@ -24,6 +24,24 @@ export function AppShell({
   const other = zh ? "en-AU" : "zh-CN";
   const pathname = usePathname();
   const switchedPath = pathname.replace(`/${locale}/`, `/${other}/`);
+  const isSectionActive = (item: NavigationItem) =>
+    pathname === `/${locale}/workspace/${item.id}` ||
+    Boolean(item.children?.some((child) => child.path && pathname.endsWith(child.path)));
+  // Tracks sections the user has manually toggled open; the section containing the
+  // current page is always shown open regardless of this set (derived below), so no
+  // effect is needed to keep it in sync with navigation.
+  const [expandedByClick, setExpandedByClick] = useState<Set<string>>(new Set());
+  function toggleSection(id: string) {
+    setExpandedByClick((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
   return (
     <main className="min-h-screen bg-slate-100">
       <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 shadow-sm backdrop-blur md:px-5">
@@ -76,35 +94,70 @@ export function AppShell({
           />
         )}
         <aside
-          className={`fixed inset-y-16 left-0 z-40 w-[280px] overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-xl transition-transform md:static md:block md:w-auto md:translate-x-0 md:shadow-none ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`fixed inset-y-16 left-0 z-40 w-70 overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-xl transition-transform md:static md:block md:w-auto md:translate-x-0 md:shadow-none ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
           <nav aria-label={zh ? "ERP 导航" : "ERP navigation"} className="space-y-1">
-            {items.map((item) => (
-              <div key={item.id}>
-                <Link
-                  href={`/${locale}/workspace/${item.id}`}
-                  title={labelFor(item, locale)}
-                  onClick={() => setMobileOpen(false)}
-                  data-active={pathname === `/${locale}/workspace/${item.id}`}
-                  className="group block rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-pink-50 hover:text-pink-700 data-[active=true]:bg-pink-50 data-[active=true]:text-pink-700"
-                >
-                  <span className="mr-3 inline-block size-2 rounded-full bg-slate-300 transition group-hover:bg-pink-400 group-data-[active=true]:bg-pink-500" />
-                  {!collapsed && labelFor(item, locale)}
-                </Link>
-                {!collapsed &&
-                  item.children?.map((child) => (
-                    <Link
-                      key={child.id}
-                      href={`/${locale}/workspace/${child.path ?? `${item.id}?section=${child.id}`}`}
-                      onClick={() => setMobileOpen(false)}
-                      data-active={Boolean(child.path && pathname.endsWith(child.path))}
-                      className="my-0.5 block truncate rounded-lg py-2 pl-10 pr-2 text-xs font-medium text-slate-500 transition hover:bg-slate-50 hover:text-pink-700 data-[active=true]:bg-pink-50 data-[active=true]:text-pink-700"
+            {items.map((item) => {
+              const hasChildren = Boolean(item.children?.length);
+              const active = isSectionActive(item);
+              const open = active || expandedByClick.has(item.id);
+              return (
+                <div key={item.id}>
+                  {hasChildren ? (
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      title={labelFor(item, locale)}
+                      data-active={active}
+                      onClick={() => {
+                        if (collapsed) {
+                          setCollapsed(false);
+                        }
+                        toggleSection(item.id);
+                      }}
+                      className="group flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-pink-50 hover:text-pink-700 data-[active=true]:bg-pink-50 data-[active=true]:text-pink-700"
                     >
-                      {labelFor(child, locale)}
+                      <span className="flex items-center">
+                        <span className="mr-3 inline-block size-2 rounded-full bg-slate-300 transition group-hover:bg-pink-400 group-data-[active=true]:bg-pink-500" />
+                        {!collapsed && labelFor(item, locale)}
+                      </span>
+                      {!collapsed && (
+                        <span
+                          aria-hidden="true"
+                          className={`text-[10px] text-slate-400 transition-transform ${open ? "rotate-90" : ""}`}
+                        >
+                          ▶
+                        </span>
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/${locale}/workspace/${item.id}`}
+                      title={labelFor(item, locale)}
+                      onClick={() => setMobileOpen(false)}
+                      data-active={active}
+                      className="group block rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-pink-50 hover:text-pink-700 data-[active=true]:bg-pink-50 data-[active=true]:text-pink-700"
+                    >
+                      <span className="mr-3 inline-block size-2 rounded-full bg-slate-300 transition group-hover:bg-pink-400 group-data-[active=true]:bg-pink-500" />
+                      {!collapsed && labelFor(item, locale)}
                     </Link>
-                  ))}
-              </div>
-            ))}
+                  )}
+                  {!collapsed &&
+                    open &&
+                    item.children?.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={`/${locale}/workspace/${child.path ?? `${item.id}?section=${child.id}`}`}
+                        onClick={() => setMobileOpen(false)}
+                        data-active={Boolean(child.path && pathname.endsWith(child.path))}
+                        className="my-0.5 block truncate rounded-lg py-2 pl-10 pr-2 text-xs font-medium text-slate-500 transition hover:bg-slate-50 hover:text-pink-700 data-[active=true]:bg-pink-50 data-[active=true]:text-pink-700"
+                      >
+                        {labelFor(child, locale)}
+                      </Link>
+                    ))}
+                </div>
+              );
+            })}
           </nav>
         </aside>
         <section className="min-w-0 p-4 md:p-6 lg:p-8">{children}</section>

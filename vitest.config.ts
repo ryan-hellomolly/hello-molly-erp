@@ -12,6 +12,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./src/test/setup.ts"],
     sequence: { concurrent: false },
+    fileParallelism: false,
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
@@ -24,6 +25,7 @@ export default defineConfig({
         "src/server/reference-data/**/*.ts",
         "src/server/templates/**/*.ts",
         "src/server/foundation-records/**/*.ts",
+        "src/server/styles/**/*.ts",
       ],
       exclude: ["src/server/**/*.test.ts", "src/server/auth/contracts.ts"],
       thresholds: {

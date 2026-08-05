@@ -5,7 +5,13 @@ import { redis } from "@/server/redis";
 import { matchesOrigin } from "./origin";
 
 export function isTrustedOrigin(origin: string | null) {
-  return matchesOrigin(origin, env.APP_URL, env.NODE_ENV !== "production");
+  // Outside production, trust any origin so local dev can be reached interchangeably via
+  // localhost and tunnels (e.g. ngrok) without editing APP_URL each time. Production always
+  // enforces the strict same-origin match below.
+  if (env.NODE_ENV !== "production") {
+    return true;
+  }
+  return matchesOrigin(origin, env.APP_URL, false);
 }
 export async function assertTrustedOrigin() {
   const origin = (await headers()).get("origin");
