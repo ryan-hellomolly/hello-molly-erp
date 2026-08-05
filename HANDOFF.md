@@ -199,6 +199,7 @@ Fixed a pre-existing test flake while verifying this work: Vitest ran test files
 - Maintain both Chinese and English user-facing copy.
 - Keep Hello Molly pink for primary actions, focus and active states; do not turn dense operational tables into large pink surfaces.
 - Preserve unrelated user changes in the worktree.
+- The app targets a compact, dense ERP density app-wide: `src/app/globals.css` sets `html { font-size: 87.5%; }`, which uniformly shrinks every Tailwind `rem`-based text/spacing/radius utility across all pages — do not add per-component size overrides to compensate, and do not introduce new literal-pixel arbitrary values (e.g. `w-[280px]`) for layout dimensions that should track the scale; use Tailwind's numeric spacing scale (e.g. `w-70`) instead so they shrink in sync. Fixed-pixel values remain appropriate only for overflow/breakpoint thresholds (table `min-width`, dialog `max-width`), not typographic sizing.
 
 ## 10. Key code locations
 

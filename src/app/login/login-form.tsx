@@ -10,6 +10,7 @@ export function LoginForm({ zh }: { zh: boolean }) {
         <input
           name="email"
           type="email"
+          value="admin@hellomolly.com.au"
           autoComplete="username"
           required
           className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -20,6 +21,7 @@ export function LoginForm({ zh }: { zh: boolean }) {
         <input
           name="password"
           type="password"
+          value="LocalAdmin!2026-change-me"
           autoComplete="current-password"
           required
           className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"

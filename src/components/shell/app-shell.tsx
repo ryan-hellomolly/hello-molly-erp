@@ -76,7 +76,7 @@ export function AppShell({
           />
         )}
         <aside
-          className={`fixed inset-y-16 left-0 z-40 w-[280px] overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-xl transition-transform md:static md:block md:w-auto md:translate-x-0 md:shadow-none ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+          className={`fixed inset-y-16 left-0 z-40 w-70 overflow-y-auto border-r border-slate-200 bg-white p-3 shadow-xl transition-transform md:static md:block md:w-auto md:translate-x-0 md:shadow-none ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
           <nav aria-label={zh ? "ERP 导航" : "ERP navigation"} className="space-y-1">
             {items.map((item) => (
