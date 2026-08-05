@@ -83,7 +83,7 @@ The current discovery evidence includes automated menu/page captures, screenshot
 | --- | --- | --- |
 | Dashboard | R1, expanded in R3 | Role-based tasks, warnings, approvals, and operational metrics |
 | Master Data | R1 | Customers, suppliers, factories, sizes, warehouses, terms, templates, numbering |
-| Merchandise Planning | R1 | Seasons, collections, briefs, plans, line plans, calendars, target cost |
+| Merchandise Planning | R1 | Per customer decision (5 Aug 2026), scope reduced to Material Swatch only; seasons, collections, briefs, plans, line plans, calendars and target cost are out of scope for this phase |
 | Style Design | R1 | Style record, Tech Pack, SKU matrix, measurement, operation, labels |
 | Material Development | R1 | Fabric/trim master, swatches, colours, quotes, tests, sourcing, BOM |
 | Partner Profiles | R2 | Customer, supplier, and factory profiles and scorecards |
@@ -592,7 +592,7 @@ The durations below are planning ranges. Workstreams overlap after the architect
 
 **Activities**
 
-- Implement season/collection planning, briefs, line plans, milestones, owners, and target cost.
+- Implement Merchandise Planning's Material Swatch capability. Per customer decision (5 Aug 2026), season/collection planning, briefs, line plans, milestones, owners, and target cost are out of scope for this phase.
 - Implement style identity, colour/size/SKU matrix, media, labels, operations, and lifecycle state.
 - Implement versioned Tech Packs, measurements, tolerances, construction details, and publish controls.
 - Implement fabric, trim, packaging, supplier source, swatch, test, MOQ, and quote records.

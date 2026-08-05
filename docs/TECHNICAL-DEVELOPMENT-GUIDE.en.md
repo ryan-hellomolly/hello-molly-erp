@@ -69,7 +69,7 @@ One `style_id` must connect planning, style, materials, samples, measurements, f
 | --- | --- | --- |
 | Dashboard | Tasks, warnings, approvals, metrics | Role-based workbench, overdue and exception queues |
 | Master Data | Customers, factories, suppliers, addresses, terms, invoice/sample/cost types, sizes, warehouses, channels, templates | Governed master data, numbering, validity, import/export, reference checks |
-| Merchandise Planning | Board, swatches, intelligence, briefs, plans/tasks | Season/collection, line plan, target cost, calendar, gate review |
+| Merchandise Planning | Board, swatches, intelligence, briefs, plans/tasks | Per customer decision (5 Aug 2026), scope is now Material Swatch only; board, intelligence, briefs, plans/tasks and the originally planned season/collection, line plan, target cost, calendar and gate review are out of scope for this phase |
 | Style Design | Style record/library, SKU, season, brand, barcode, operation, sizing, care labels | Versioned Tech Pack, BOM, measurement, construction, media, color/size/SKU matrix |
 | Material Development | Fabrics, trims/packaging, library, classifications, units | Material master, colors, sources, swatches, tests, MOQ, quotes, substitutes |
 | Partner Profiles | Customer/factory/supplier profiles | Delivery, quality, price scorecards and risk flags |

@@ -200,8 +200,9 @@ Use this small board for items that are actively moving; leave the complete back
 
 ## 6. Product Development Core — Phase 2
 
-- [ ] `P2-PLN-001` Implement seasons, collections, briefs, line plans and milestones. `[Owner: Merchandise Planning]`
-- [ ] `P2-PLN-002` Implement target cost, budget and assortment controls. `[Owner: Merchandise Planning + Finance]`
+- [ ] `P2-PLN-001` Implement seasons, collections, briefs, line plans and milestones. `[Owner: Merchandise Planning]` `[Scope note 5 Aug 2026: out of scope for this phase per customer decision — Merchandise Planning is now limited to Material Swatch (P2-PLN-003) until re-scoped]`
+- [ ] `P2-PLN-002` Implement target cost, budget and assortment controls. `[Owner: Merchandise Planning + Finance]` `[Scope note 5 Aug 2026: out of scope for this phase per customer decision — see P2-PLN-001]`
+- [ ] `P2-PLN-003` Implement Material Swatch (物料小样) as the sole in-scope Merchandise Planning capability for this phase, per customer decision. `[Owner: Merchandise Planning]`
 - [ ] `P2-STY-001` Implement Style identity, status, owner and lifecycle timeline. `[Owner: Style Team]`
 - [ ] `P2-STY-002` Implement colour, size and SKU matrix. `[Owner: Style Team]`
 - [ ] `P2-STY-003` Implement immutable Tech Pack versions and publication. `[Owner: Style Team]`

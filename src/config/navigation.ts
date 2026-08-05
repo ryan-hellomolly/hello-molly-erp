@@ -66,11 +66,7 @@ export const navigation: NavigationItem[] = [
     "工艺要求模板 / Construction Requirement Templates",
     "尺寸表模板 / Measurement Chart Templates",
   ]),
-  m("planning", "商品企划", "Merchandise Planning", [
-    "企划看板 / Planning Board",
-    "商品企划书 / Merchandise Plans",
-    "新款开发计划 / Development Plans",
-  ]),
+  m("planning", "商品企划", "Merchandise Planning", ["物料小样 / Material Swatch"]),
   m("style-design", "款式设计", "Style Design", [
     "款式档案 / Style Records",
     "款式类型 / Style Type",

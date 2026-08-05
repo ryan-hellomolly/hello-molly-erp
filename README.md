@@ -2,6 +2,10 @@
 
 Production ERP implementation for teams in Australia and China. This repository is intentionally separate from the ERP exploration, captured evidence and customer prototype repository.
 
+## Demo
+
+Temporary Ngrok local-tunnel demo: <https://chiquita-hyperarchaeological-unsuperlatively.ngrok-free.dev/> — this points at a developer's local machine via ngrok and is not a persistent or production URL; it will stop working whenever that tunnel is closed or restarted.
+
 ## Phase 0 baseline
 
 - Next.js 16 App Router with TypeScript and Tailwind CSS
